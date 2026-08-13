@@ -1,69 +1,128 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+import GraphViewer from "@/components/GraphViewer";
+import Skeleton from "@/components/Skeleton";
+import { getGraphStats } from "@/lib/queries/graph";
+
+// Without this, Next statically prerenders this page at build time (nothing
+// in the render path reads searchParams/cookies/headers to signal otherwise),
+// freezing the stat counts until the next deploy instead of reflecting the
+// live graph.
+export const dynamic = "force-dynamic";
+
+const STAT_TILES = [
+  { key: "developers", label: "Developers", href: "/developers", color: "#38bdf8" },
+  { key: "projects", label: "Projects", href: "/projects", color: "#34d399" },
+  { key: "skills", label: "Skills", href: "/skills", color: "#a78bfa" },
+  { key: "technologies", label: "Technologies", href: "/technologies", color: "#fbbf24" },
+  { key: "companies", label: "Companies", href: null, color: "#f87171" },
+] as const;
+
+async function StatTiles() {
+  const stats = await getGraphStats();
+
+  return (
+    <>
+      {STAT_TILES.map((tile) => {
+        const content = (
+          <>
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: tile.color }}
+              aria-hidden="true"
+            />
+            <div>
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
+                {stats[tile.key]}
+              </p>
+              <p className="mt-0.5 text-xs text-muted">{tile.label}</p>
+            </div>
+          </>
+        );
+
+        return tile.href ? (
+          <Link
+            key={tile.key}
+            href={tile.href}
+            className="card-surface flex items-center gap-3 rounded-xl p-4"
+          >
+            {content}
+          </Link>
+        ) : (
+          <div key={tile.key} className="card-surface flex items-center gap-3 rounded-xl p-4">
+            {content}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function StatTilesSkeleton() {
+  return (
+    <>
+      {STAT_TILES.map((tile) => (
+        <Skeleton key={tile.key} className="h-[68px] w-full rounded-xl" />
+      ))}
+    </>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="flex-1">
+      <section className="dot-grid border-b border-border bg-gradient-to-b from-accent-soft/60 to-transparent">
+        <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+            Developer intelligence, as a graph
           </p>
+          <h1 className="mt-3 max-w-lg text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            Who knows what, connected.
+          </h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
+            DevGraph maps developers, skills, projects, and technologies as a
+            living graph — so you can trace a skill to the people who have
+            it, and a project to what it&apos;s really built on.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/graph"
+              className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-contrast shadow-md transition-transform hover:-translate-y-0.5 hover:bg-accent-hover"
+            >
+              Open Graph Explorer
+            </Link>
+            <Link
+              href="/developers"
+              className="rounded-lg border border-border-strong bg-surface px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+            >
+              Browse developers
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <div className="mx-auto w-full max-w-4xl px-6 py-12">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <Suspense fallback={<StatTilesSkeleton />}>
+            <StatTiles />
+          </Suspense>
         </div>
-      </main>
-    </div>
+
+        <div className="mt-12 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">
+            Graph overview
+          </h2>
+          <Link
+            href="/graph"
+            className="text-sm font-medium text-accent transition-colors hover:text-accent-hover"
+          >
+            Open full explorer →
+          </Link>
+        </div>
+        <div className="mt-4">
+          <GraphViewer compact />
+        </div>
+      </div>
+    </main>
   );
 }
