@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Allows accessing the dev server from other devices on the LAN (e.g.
+  // testing on a phone) via the printed Network URL, without Next.js
+  // blocking the HMR websocket as a cross-origin request.
+  allowedDevOrigins: ["10.0.0.212"],
 };
 
 export default nextConfig;

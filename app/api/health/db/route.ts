@@ -1,9 +1,9 @@
 import { getCognoSession } from '@/lib/cognodb'
 
 export async function GET() {
-  const session = getCognoSession()
-
+  let session
   try {
+    session = getCognoSession()
     await session.run('RETURN 1 AS result')
     return Response.json({ success: true, database: 'connected' })
   } catch (error) {
@@ -13,6 +13,6 @@ export async function GET() {
       { status: 503 }
     )
   } finally {
-    await session.close()
+    await session?.close()
   }
 }
